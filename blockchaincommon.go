@@ -122,17 +122,20 @@ var publickey []byte
  * @param {string} flag 标记，用于同一地址区块链并发交易使用，通常就填写本函数名称{Reg}
  * @return {*}conflux地址，ETH地址
  */
-func Reg(IPandPort string, APPID string, RegPassword string, flag string) (string, string) {
-	body = regitPost(IPandPort, "UserRegit", APPID, RegPassword, flag)
+func Reg(IPandPort string, APPID string, RegPassword string, flag string) (string, string, error) {
+	body, err := regitPost(IPandPort, "UserRegit", APPID, RegPassword, flag)
+	if err != nil {
+		return string(body), string(body), err
+	}
 	fmt.Println(string(body))
 	res := &UserRegitRes_Message{}
-	err := json.Unmarshal(body, res)
+	err = json.Unmarshal(body, res)
 	if err != nil {
-		return err.Error(), err.Error()
+		return err.Error(), err.Error(), err
 	}
 	fmt.Println("Confluxaddress:", res.Confluxaddress)
 	fmt.Println("ETHaddress:", res.ETHaddress)
-	return res.Confluxaddress, res.ETHaddress
+	return res.Confluxaddress, res.ETHaddress, nil
 }
 
 /**
@@ -142,19 +145,20 @@ func Reg(IPandPort string, APPID string, RegPassword string, flag string) (strin
  * @param {string} filename 加密通信公钥文件路径 public.pem  也可以自己重命名名称
  * @return {*}
  */
-func InitRSAPuk(filename string) {
+func InitRSAPuk(filename string) error {
 	//1. 读取公钥信息 放到data变量中
 	file, err := os.Open(filename)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	stat, _ := file.Stat() //得到文件属性信息
 	data := make([]byte, stat.Size())
 	file.Read(data)
 	file.Close()
 	publickey = data
+	return nil
 }
-func regitPost(IPandPort string, actionName string, myappid string, Password string, flag string) []byte {
+func regitPost(IPandPort string, actionName string, myappid string, Password string, flag string) ([]byte, error) {
 	now := uint64(time.Now().Unix())    //获取当前时间
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
@@ -168,7 +172,7 @@ func regitPost(IPandPort string, actionName string, myappid string, Password str
 	messages := UserRegit_Message{sha256Value, src_appid, src_mytime, src_token, src_Password}
 	ba, err := json.Marshal(messages)
 	if err != nil {
-		return []byte("json.Marshal error")
+		return []byte(""), err
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -178,13 +182,13 @@ func regitPost(IPandPort string, actionName string, myappid string, Password str
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body))
+		return body, err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte("ReadAll error")
+		return body, err
 	}
-	return body
+	return body, nil
 }
 
 /////////////////////////////////////CONFLUX AND ETH//////////////////////////////////////////
@@ -199,7 +203,7 @@ func regitPost(IPandPort string, actionName string, myappid string, Password str
  * @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
  * @return {*}返回值[]byte统一string()处理即可，本函数返回值为一个big.Int的字符串表示
  */
-func TotalSupplyPost(IPandPort string, actionName string, myappid string, flag string, ChainType string) []byte {
+func TotalSupplyPost(IPandPort string, actionName string, myappid string, flag string, ChainType string) ([]byte, error) {
 	now := uint64(time.Now().Unix())    //获取当前时间
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
@@ -214,7 +218,7 @@ func TotalSupplyPost(IPandPort string, actionName string, myappid string, flag s
 	messages := UserRegit_Message{sha256Value, src_appid, src_mytime, src_token, src_ChainType}
 	ba, err := json.Marshal(messages)
 	if err != nil {
-		return []byte("json.Marshal error")
+		return []byte("json.Marshal error"), err
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -224,13 +228,13 @@ func TotalSupplyPost(IPandPort string, actionName string, myappid string, flag s
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body))
+		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte("ReadAll error")
+		return []byte("ReadAll error"), err
 	}
-	return body
+	return body, nil
 }
 
 /**
@@ -245,7 +249,7 @@ func TotalSupplyPost(IPandPort string, actionName string, myappid string, flag s
  * @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
  * @return {*}返回NFT的id,例如：1,2,3,6,33,666,7543   以逗号隔开，请使用字符串split即可c拆分为数组
  */
-func UserNFTsPost(IPandPort string, actionName string, myappid string, From string, flag string, ChainType string) []byte {
+func UserNFTsPost(IPandPort string, actionName string, myappid string, From string, flag string, ChainType string) ([]byte, error) {
 	now := uint64(time.Now().Unix())    //获取当前时间
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
@@ -261,7 +265,7 @@ func UserNFTsPost(IPandPort string, actionName string, myappid string, From stri
 	messages := UserNFTs_Message{sha256Value, src_appid, src_mytime, src_token, src_From, src_ChainType}
 	ba, err := json.Marshal(messages)
 	if err != nil {
-		return []byte("json.Marshal error")
+		return []byte("json.Marshal error"), err
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -271,13 +275,13 @@ func UserNFTsPost(IPandPort string, actionName string, myappid string, From stri
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body))
+		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte("ReadAll error")
+		return []byte("ReadAll error"), err
 	}
-	return body
+	return body, nil
 }
 
 /**
@@ -294,9 +298,9 @@ func UserNFTsPost(IPandPort string, actionName string, myappid string, From stri
  * @param {string} to NFT创建出来拥有者的地址，这个地址可以是管理员地址，也可以是其他用户的地址。例如：统一分发型的NFT就是先给管理员创建NFT，最后再转移给用户，那么这里传入的就是管理员地址。
  * @param {string} flag 标记，用于同一地址区块链并发交易使用，通常就填写本函数名称{AdminCreateNFTPost}
  * @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
- * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63    可以通过判断字符串长度来判断是否成功；其他返回他信息皆为错误原因err.Error()
+ * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63     可以通过判断err!=nil；其他返回他信息错误原因err.Error()在[]byte内
  */
-func AdminCreateNFTPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, to string, flag string, ChainType string) []byte {
+func AdminCreateNFTPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, to string, flag string, ChainType string) ([]byte, error) {
 	now := uint64(time.Now().Unix())    //获取当前时间
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
@@ -317,7 +321,7 @@ func AdminCreateNFTPost(IPandPort string, actionName string, myappid string, Non
 	messages := AdminCreateNFT_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, src_To, src_ChainType}
 	ba, err := json.Marshal(messages)
 	if err != nil {
-		return []byte("json.Marshal error")
+		return []byte("json.Marshal error"), err
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -327,13 +331,13 @@ func AdminCreateNFTPost(IPandPort string, actionName string, myappid string, Non
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body))
+		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte("ReadAll error")
+		return []byte("ReadAll error"), err
 	}
-	return body
+	return body, nil
 }
 
 /**
@@ -350,9 +354,9 @@ func AdminCreateNFTPost(IPandPort string, actionName string, myappid string, Non
  * @param {[]string} tos NFT创建出来拥有者的地址，【是一个数组】，这些地址可以都是管理员地址，也可以是其他用户的地址。例如：统一分发型的NFT就是先给管理员创建NFT，最后再转移给用户，那么这里数组传入的都是管理员地址。
  * @param {string} flag 标记，用于同一地址区块链并发交易使用，通常就填写本函数名称{AdminCreateNFTBatchPost}
  * @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
- * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63    可以通过判断字符串长度来判断是否成功；其他返回他信息皆为错误原因err.Error()
+ * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63     可以通过判断err!=nil；其他返回他信息错误原因err.Error()在[]byte内
  */
-func AdminCreateNFTBatchPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, tos []string, flag string, ChainType string) []byte {
+func AdminCreateNFTBatchPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, tos []string, flag string, ChainType string) ([]byte, error) {
 	now := uint64(time.Now().Unix())    //获取当前时间
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
@@ -373,7 +377,7 @@ func AdminCreateNFTBatchPost(IPandPort string, actionName string, myappid string
 	messages := AdminCreateNFTBatch_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, src_Tos, src_ChainType}
 	ba, err := json.Marshal(messages)
 	if err != nil {
-		return []byte("json.Marshal error")
+		return []byte("json.Marshal error"), err
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -383,13 +387,13 @@ func AdminCreateNFTBatchPost(IPandPort string, actionName string, myappid string
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body))
+		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte("ReadAll error")
+		return []byte("ReadAll error"), err
 	}
-	return body
+	return body, nil
 }
 
 /**
@@ -407,9 +411,9 @@ func AdminCreateNFTBatchPost(IPandPort string, actionName string, myappid string
  * @param {[]string} ids 转移的ID，与tos数组一一对应
  * @param {string} flag 标记，用于同一地址区块链并发交易使用，通常就填写本函数名称{AdminTransferNFTBatchPost}
  * @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
- * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63    可以通过判断字符串长度来判断是否成功；其他返回他信息皆为错误原因err.Error()
+ * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63     可以通过判断err!=nil；其他返回他信息错误原因err.Error()在[]byte内
  */
-func AdminTransferNFTBatchPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, tos []string, ids []string, flag string, ChainType string) []byte {
+func AdminTransferNFTBatchPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, tos []string, ids []string, flag string, ChainType string) ([]byte, error) {
 	now := uint64(time.Now().Unix())    //获取当前时间
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
@@ -431,7 +435,7 @@ func AdminTransferNFTBatchPost(IPandPort string, actionName string, myappid stri
 	messages := AdminTransferNFTBatch_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, src_Tos, src_ids, src_ChainType}
 	ba, err := json.Marshal(messages)
 	if err != nil {
-		return []byte("json.Marshal error")
+		return []byte("json.Marshal error"), err
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -441,13 +445,13 @@ func AdminTransferNFTBatchPost(IPandPort string, actionName string, myappid stri
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body))
+		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte("ReadAll error")
+		return []byte("ReadAll error"), err
 	}
-	return body
+	return body, nil
 }
 
 /**
@@ -465,9 +469,9 @@ func AdminTransferNFTBatchPost(IPandPort string, actionName string, myappid stri
  * @param {string} id 转移NFT的ID
  * @param {string} flag 标记，用于同一地址区块链并发交易使用，通常就填写本函数名称{TransferFromPost}
  * @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
- * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63    可以通过判断字符串长度来判断是否成功；其他返回他信息皆为错误原因err.Error()
+ * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63     可以通过判断err!=nil；其他返回他信息错误原因err.Error()在[]byte内
  */
-func TransferFromPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, to string, id string, flag string, ChainType string) []byte {
+func TransferFromPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, to string, id string, flag string, ChainType string) ([]byte, error) {
 	now := uint64(time.Now().Unix())    //获取当前时间
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
@@ -487,7 +491,7 @@ func TransferFromPost(IPandPort string, actionName string, myappid string, Nonce
 	messages := TransferFrom_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, to, id, src_ChainType}
 	ba, err := json.Marshal(messages)
 	if err != nil {
-		return []byte("json.Marshal error")
+		return []byte("json.Marshal error"), err
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -497,13 +501,13 @@ func TransferFromPost(IPandPort string, actionName string, myappid string, Nonce
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body))
+		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte("ReadAll error")
+		return []byte("ReadAll error"), err
 	}
-	return body
+	return body, nil
 }
 
 /**
@@ -520,9 +524,9 @@ func TransferFromPost(IPandPort string, actionName string, myappid string, Nonce
  * @param {string} id 需要销毁的NFT的ID，该ID的NFT必须属于From地址
  * @param {string} flag 标记，用于同一地址区块链并发交易使用，通常就填写本函数名称{BurnPost}
  * @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
- * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63    可以通过判断字符串长度来判断是否成功；其他返回他信息皆为错误原因err.Error()
+ * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63     可以通过判断err!=nil；其他返回他信息错误原因err.Error()在[]byte内
  */
-func BurnPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, id string, flag string, ChainType string) []byte {
+func BurnPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, id string, flag string, ChainType string) ([]byte, error) {
 	now := uint64(time.Now().Unix())    //获取当前时间
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
@@ -542,7 +546,7 @@ func BurnPost(IPandPort string, actionName string, myappid string, Nonce int64, 
 	messages := TransferFrom_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, "", id, src_ChainType}
 	ba, err := json.Marshal(messages)
 	if err != nil {
-		return []byte("json.Marshal error")
+		return []byte("json.Marshal error"), err
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -552,13 +556,13 @@ func BurnPost(IPandPort string, actionName string, myappid string, Nonce int64, 
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body))
+		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte("ReadAll error")
+		return []byte("ReadAll error"), err
 	}
-	return body
+	return body, nil
 }
 
 /**
@@ -576,9 +580,9 @@ func BurnPost(IPandPort string, actionName string, myappid string, Nonce int64, 
  * @param {string} id 需要授权的NFT的ID，该ID的NFT必须属于From地址
  * @param {string} flag 标记，用于同一地址区块链并发交易使用，通常就填写本函数名称{BurnPost}
  * @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
- * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63    可以通过判断字符串长度来判断是否成功；其他返回他信息皆为错误原因err.Error()
+ * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63     可以通过判断err!=nil；其他返回他信息错误原因err.Error()在[]byte内
  */
-func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, to string, id string, flag string, ChainType string) []byte {
+func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, to string, id string, flag string, ChainType string) ([]byte, error) {
 	now := uint64(time.Now().Unix())    //获取当前时间
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
@@ -598,7 +602,7 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
 	messages := TransferFrom_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, to, id, src_ChainType}
 	ba, err := json.Marshal(messages)
 	if err != nil {
-		return []byte("json.Marshal error")
+		return []byte("json.Marshal error"), err
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -608,13 +612,13 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body))
+		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte("ReadAll error")
+		return []byte("ReadAll error"), err
 	}
-	return body
+	return body, nil
 }
 
 /**
@@ -631,9 +635,9 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
  * @param {[]string} ids NFTID数组
  * @param {string} flag 标记，用于同一地址区块链并发交易使用，通常就填写本函数名称{BurnPost}
  * @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
- * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63    可以通过判断字符串长度来判断是否成功；其他返回他信息皆为错误原因err.Error()
+ * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63     可以通过判断err!=nil；其他返回他信息错误原因err.Error()在[]byte内
  */
-func BurnBatchPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, ids []string, flag string, ChainType string) []byte {
+func BurnBatchPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, ids []string, flag string, ChainType string) ([]byte, error) {
 	now := uint64(time.Now().Unix())    //获取当前时间
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
@@ -655,7 +659,7 @@ func BurnBatchPost(IPandPort string, actionName string, myappid string, Nonce in
 	messages := AdminTransferNFTBatch_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, src_Tos, src_ids, src_ChainType}
 	ba, err := json.Marshal(messages)
 	if err != nil {
-		return []byte("json.Marshal error")
+		return []byte("json.Marshal error"), err
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -665,13 +669,13 @@ func BurnBatchPost(IPandPort string, actionName string, myappid string, Nonce in
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body))
+		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte("ReadAll error")
+		return []byte("ReadAll error"), err
 	}
-	return body
+	return body, nil
 }
 
 /**
@@ -687,9 +691,9 @@ func BurnBatchPost(IPandPort string, actionName string, myappid string, Nonce in
  * @param {string} From  NFT创建者地址
  * @param {string} flag 标记，用于同一地址区块链并发交易使用，通常就填写本函数名称{BurnPost}
  * @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
- * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63    可以通过判断字符串长度来判断是否成功；其他返回他信息皆为错误原因err.Error()
+ * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63    可以通过判断err!=nil；其他返回他信息错误原因err.Error()在[]byte内
  */
-func UserFreeMintPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, flag string, ChainType string) []byte {
+func UserFreeMintPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, flag string, ChainType string) ([]byte, error) {
 	now := uint64(time.Now().Unix())    //获取当前时间
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
@@ -709,7 +713,7 @@ func UserFreeMintPost(IPandPort string, actionName string, myappid string, Nonce
 	messages := FreeGasMint_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, src_ChainType}
 	ba, err := json.Marshal(messages)
 	if err != nil {
-		return []byte("json.Marshal error")
+		return []byte("json.Marshal error"), err
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -719,13 +723,13 @@ func UserFreeMintPost(IPandPort string, actionName string, myappid string, Nonce
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body))
+		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte("ReadAll error")
+		return []byte("ReadAll error"), err
 	}
-	return body
+	return body, nil
 }
 
 //使用rsa公钥加密文件
@@ -827,3 +831,4 @@ func CalculateHashcode(data string) string {
 }
 
 //跨域
+
