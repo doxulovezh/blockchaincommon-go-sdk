@@ -107,8 +107,8 @@ const TestAPPID_CFXName string = "0xd67c8aed16df25b21055993449222fa895c67eb87bb1
 const TestAPPID_ETHName string = "0xd8350f2533aa38e5ed0b99b1b4af1a134ba9854bbcf66435239b9c18f60276d7" //测试专用 APPID就是对应项目ID，不同项目会有不同合约,APPID也会不同
 //密钥托管服务器Post请求url
 const TestIPandPort string = "https://1.116.87.151:13149"                                       //测试专用
-const TestAdministratorPassword string = "!!@@qinfengdx"                                        //测试专用 管理员密码，cfx和eth都是这个
-const TestCFXAdministratorAddress string = "cfxtest:aatpg41yksf8rm5nzf7thr23jdk9hsfzhe9hv6gdwa" //测试专用
+const TestAdministratorPassword string = "dx123456"                                             //测试专用 管理员密码，cfx和eth都是这个
+const TestCFXAdministratorAddress string = "cfxtest:aakmdj7tutgdy3h558rr5621mhrrx75kfyw3e3sfz0" //测试专用
 const TestETHAdministratorAddress string = "0xfec36af44b8be6AB6ba97aF3b71940D3f3B8B539"         //测试专用
 var publickey []byte
 
@@ -831,4 +831,3 @@ func CalculateHashcode(data string) string {
 }
 
 //跨域
-
