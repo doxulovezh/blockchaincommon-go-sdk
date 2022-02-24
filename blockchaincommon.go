@@ -1,4 +1,4 @@
-package zkverse
+package blockchaincommon
 
 import (
 	"bytes"
@@ -225,7 +225,7 @@ func regitPost(IPandPort string, actionName string, myappid string, Password str
 	}
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
+		// body, err := ioutil.ReadAll(resp.Body)
 		return body, err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
@@ -258,7 +258,7 @@ func regitPrkPost(IPandPort string, actionName string, myappid string, Password 
 	}
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
+		// body, err := ioutil.ReadAll(resp.Body)
 		return body, err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
@@ -304,8 +304,8 @@ func TotalSupplyPost(IPandPort string, actionName string, myappid string, flag s
 	}
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
+		// body, err := ioutil.ReadAll(resp.Body)
+		return []byte("http error:" + fmt.Sprint(err)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -351,8 +351,8 @@ func UserNFTURIPost(thurl string, actionName string, myappid string, id string, 
 	}
 	resp, err := client.Post(thurl+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
+		// body, err := ioutil.ReadAll(resp.Body)
+		return []byte("http error:" + fmt.Sprint(err)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -398,8 +398,8 @@ func OwnerOfPost(thurl string, actionName string, myappid string, id string, fla
 	}
 	resp, err := client.Post(thurl+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
+		// body, err := ioutil.ReadAll(resp.Body)
+		return []byte("http error:" + fmt.Sprint(err)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -445,8 +445,8 @@ func UserNFTsPost(IPandPort string, actionName string, myappid string, From stri
 	}
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
+		// body, err := ioutil.ReadAll(resp.Body)
+		return []byte("http error:" + fmt.Sprint(err)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -501,8 +501,8 @@ func AdminCreateNFTPost(IPandPort string, actionName string, myappid string, Non
 	}
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
+		// body, err := ioutil.ReadAll(resp.Body)
+		return []byte("http error:" + fmt.Sprint(err)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -557,8 +557,8 @@ func AdminCreateNFTBatchPost(IPandPort string, actionName string, myappid string
 	}
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
+		// body, err := ioutil.ReadAll(resp.Body)
+		return []byte("http error:" + fmt.Sprint(err)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -615,8 +615,8 @@ func AdminTransferNFTBatchPost(IPandPort string, actionName string, myappid stri
 	}
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
+		// body, err := ioutil.ReadAll(resp.Body)
+		return []byte("http error:" + fmt.Sprint(err)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -671,8 +671,8 @@ func TransferFromPost(IPandPort string, actionName string, myappid string, Nonce
 	}
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
+		// body, err := ioutil.ReadAll(resp.Body)
+		return []byte("http error:" + fmt.Sprint(err)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -726,8 +726,8 @@ func BurnPost(IPandPort string, actionName string, myappid string, Nonce int64, 
 	}
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
+		// body, err := ioutil.ReadAll(resp.Body)
+		return []byte("http error:" + fmt.Sprint(err)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -782,8 +782,8 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
 	}
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
+		// body, err := ioutil.ReadAll(resp.Body)
+		return []byte("http error:" + fmt.Sprint(err)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -839,8 +839,8 @@ func BurnBatchPost(IPandPort string, actionName string, myappid string, Nonce in
 	}
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
+		// body, err := ioutil.ReadAll(resp.Body)
+		return []byte("http error:" + fmt.Sprint(err)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -893,8 +893,8 @@ func UserFreeMintPost(IPandPort string, actionName string, myappid string, Nonce
 	}
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
-		body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err) + "internel:" + string(body)), err
+		// body, err := ioutil.ReadAll(resp.Body)
+		return []byte("http error:" + fmt.Sprint(err)), err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
