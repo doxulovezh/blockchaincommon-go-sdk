@@ -625,23 +625,25 @@ func AdminTransferNFTBatchPost(IPandPort string, actionName string, myappid stri
 	return body, nil
 }
 
-/**
- * @name:TransferFromPost
- * @test: 本函数为【写入类函数】谨慎调用，会参数区块链交易信息并通过密钥系统签名，会改变区块链信息。
- * @msg:NFT的通用转移函数，本函数实现NFTID为id的NFT从From地址转移至to地址。From地址必须是id的NFT拥有者
- * @param {string} IPandPort 密钥系统请求链接 例如 https://127.0.0.1:13149
- * @param {string} actionName 请求名称，同样名称的含义也是请求的功能，注意区分ETH和Conflux。本参数传入：CFX_TransferFrom代表conflux区块链上的合约，ETH_TransferFrom代表以太坊及其侧链、L2的合约
- * @param {string} myappid 项目认证的APPID 例如 0xd67c9aed16df25b21055993449229fa895c67eb87bb1d7130c38cc469d8625b5
- * @param {int64} Nonce 随机数，该参数用于同一地址的并发区块链交易执行，如果管理员执行一次或者串行执行N次，传参-1  如果需要并发连续执行20次，那么需要一次传入0-19，作为区块链随机数以避免交易冲突
- * @param {uint64} LifeTime 私钥的生命周期，单位毫秒，设置该参数可以加快处理速度，减少区块链密钥系统解密重复运算，如果执行一次建议值2000，如果并发执行N次，建议1000*N
- * @param {string} Password From地址用户的区块链密钥解密密码，也可以理解为支付密码
- * @param {string} From  NFT拥有者地址，转移源地址
- * @param {string} to  转移NFT的目的地址
- * @param {string} id 转移NFT的ID
- * @param {string} flag 标记，用于同一地址区块链并发交易使用，通常就填写本函数名称{TransferFromPost}
- * @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
- * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63     可以通过判断err!=nil；其他返回他信息错误原因err.Error()在[]byte内
- */
+/**ERC721与ERC1155转移只需要actionName传参不同
+* @name:TransferFromPost
+* @test: 本函数为【写入类函数】谨慎调用，会参数区块链交易信息并通过密钥系统签名，会改变区块链信息。
+* @msg:NFT的通用转移函数，本函数实现NFTID为id的NFT从From地址转移至to地址。From地址必须是id的NFT拥有者
+* @param {string} IPandPort 密钥系统请求链接 例如 https://127.0.0.1:13149
+* @param {string} actionName 请求名称，同样名称的含义也是请求的功能，注意区分ETH和Conflux。
+	!本参数传入：CFX_TransferFrom代表conflux区块链上的ERC721合约，ETH_TransferFrom代表以太坊及其侧链、L2的ERC721合约
+	!CFX_1155TransferFrom代表conflux区块链上的ERC1155合约，ETH_1155TransferFrom代表以太坊及其侧链、L2的ERC1155合约
+* @param {string} myappid 项目认证的APPID 例如 0xd67c9aed16df25b21055993449229fa895c67eb87bb1d7130c38cc469d8625b5
+* @param {int64} Nonce 随机数，该参数用于同一地址的并发区块链交易执行，如果管理员执行一次或者串行执行N次，传参-1  如果需要并发连续执行20次，那么需要一次传入0-19，作为区块链随机数以避免交易冲突
+* @param {uint64} LifeTime 私钥的生命周期，单位毫秒，设置该参数可以加快处理速度，减少区块链密钥系统解密重复运算，如果执行一次建议值2000，如果并发执行N次，建议1000*N
+* @param {string} Password From地址用户的区块链密钥解密密码，也可以理解为支付密码
+* @param {string} From  NFT拥有者地址，转移源地址
+* @param {string} to  转移NFT的目的地址
+* @param {string} id 转移NFT的ID
+* @param {string} flag 标记，用于同一地址区块链并发交易使用，通常就填写本函数名称{TransferFromPost}
+* @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
+* @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63     可以通过判断err!=nil；其他返回他信息错误原因err.Error()在[]byte内
+*/
 func TransferFromPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, to string, id string, flag string, ChainType string) ([]byte, error) {
 	now := uint64(time.Now().Unix())    //获取当前时间
 	by := make([]byte, 8)               //建立数组
@@ -686,7 +688,7 @@ func TransferFromPost(IPandPort string, actionName string, myappid string, Nonce
  * @test: 本函数为【写入类函数】谨慎调用，会参数区块链交易信息并通过密钥系统签名，会改变区块链信息。
  * @msg:From地址用户销毁属于自己NFTID为id的NFT，销毁后NFT打入零地址，即黑洞，【再也无法找回】
  * @param {string} IPandPort 密钥系统请求链接 例如 https://127.0.0.1:13149
- * @param {string} actionName 请求名称，同样名称的含义也是请求的功能，注意区分ETH和Conflux。本参数传入：CFX_TransferFrom代表conflux区块链上的合约，ETH_TransferFrom代表以太坊及其侧链、L2的合约
+ * @param {string} actionName 请求名称，同样名称的含义也是请求的功能，注意区分ETH和Conflux。本参数传入：CFX_Burn代表conflux区块链上的合约，ETH_Burn代表以太坊及其侧链、L2的合约
  * @param {string} myappid 项目认证的APPID 例如 0xd67c9aed16df25b21055993449229fa895c67eb87bb1d7130c38cc469d8625b5
  * @param {int64} Nonce 随机数，该参数用于同一地址的并发区块链交易执行，如果管理员执行一次或者串行执行N次，传参-1  如果需要并发连续执行20次，那么需要一次传入0-19，作为区块链随机数以避免交易冲突
  * @param {uint64} LifeTime 私钥的生命周期，单位毫秒，设置该参数可以加快处理速度，减少区块链密钥系统解密重复运算，如果执行一次建议值2000，如果并发执行N次，建议1000*N
@@ -792,7 +794,7 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
 	return body, nil
 }
 
-/**
+/**安全性考虑废弃该接口
  * @name:BurnBatchPost
  * @test: 本函数为【写入类函数】谨慎调用，会参数区块链交易信息并通过密钥系统签名，会改变区块链信息。本函数采用Rollup模式打包交易，可以大幅加快区块链确认时间，减少Gas
  * @msg:From地址用户批量销毁属于自己NFTIDs为id的NFT，销毁后对应的NFT打入零地址，即黑洞，【再也无法找回】
@@ -808,46 +810,46 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
  * @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
  * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63     可以通过判断err!=nil；其他返回他信息错误原因err.Error()在[]byte内
  */
-func BurnBatchPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, ids []string, flag string, ChainType string) ([]byte, error) {
-	now := uint64(time.Now().Unix())    //获取当前时间
-	by := make([]byte, 8)               //建立数组
-	binary.BigEndian.PutUint64(by, now) //uint64转数组
-	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
-	src_appid := publicEncode([]byte(myappid), publickey)
-	src_mytime := publicEncode([]byte(by), publickey)
-	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
-	binary.BigEndian.PutUint64(by, uint64(Nonce)) //uint64转数组
-	src_Nonce := publicEncode([]byte(by), publickey)
-	binary.BigEndian.PutUint64(by, uint64(LifeTime)) //uint64转数组
-	src_LifeTime := publicEncode([]byte(by), publickey)
-	src_Password := publicEncode([]byte(Password), publickey)
-	src_From := publicEncode([]byte(From), publickey)
-	var src_Tos []string
-	src_ids := ids
-	src_ChainType := publicEncode([]byte(ChainType), publickey)
-	//post请求提交json数据
-	messages := AdminTransferNFTBatch_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, src_Tos, src_ids, src_ChainType}
-	ba, err := json.Marshal(messages)
-	if err != nil {
-		return []byte("json.Marshal error"), err
-	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
-	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
-	if err != nil {
-		// body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err)), err
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return []byte("ReadAll error"), err
-	}
-	return body, nil
-}
+// func BurnBatchPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, ids []string, flag string, ChainType string) ([]byte, error) {
+// 	now := uint64(time.Now().Unix())    //获取当前时间
+// 	by := make([]byte, 8)               //建立数组
+// 	binary.BigEndian.PutUint64(by, now) //uint64转数组
+// 	//加密数据
+// 	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+// 	src_appid := publicEncode([]byte(myappid), publickey)
+// 	src_mytime := publicEncode([]byte(by), publickey)
+// 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
+// 	binary.BigEndian.PutUint64(by, uint64(Nonce)) //uint64转数组
+// 	src_Nonce := publicEncode([]byte(by), publickey)
+// 	binary.BigEndian.PutUint64(by, uint64(LifeTime)) //uint64转数组
+// 	src_LifeTime := publicEncode([]byte(by), publickey)
+// 	src_Password := publicEncode([]byte(Password), publickey)
+// 	src_From := publicEncode([]byte(From), publickey)
+// 	var src_Tos []string
+// 	src_ids := ids
+// 	src_ChainType := publicEncode([]byte(ChainType), publickey)
+// 	//post请求提交json数据
+// 	messages := AdminTransferNFTBatch_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, src_Tos, src_ids, src_ChainType}
+// 	ba, err := json.Marshal(messages)
+// 	if err != nil {
+// 		return []byte("json.Marshal error"), err
+// 	}
+// 	client := &http.Client{
+// 		Transport: &http.Transport{
+// 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+// 		},
+// 	}
+// 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
+// 	if err != nil {
+// 		// body, err := ioutil.ReadAll(resp.Body)
+// 		return []byte("http error:" + fmt.Sprint(err)), err
+// 	}
+// 	body, err := ioutil.ReadAll(resp.Body)
+// 	if err != nil {
+// 		return []byte("ReadAll error"), err
+// 	}
+// 	return body, nil
+// }
 
 /**
  * @name:UserFreeMintPost
@@ -864,44 +866,44 @@ func BurnBatchPost(IPandPort string, actionName string, myappid string, Nonce in
  * @param {string} ChainType 区块链类型，参数：cfx代表conflux  eth代表以太坊  bsc代表币安链  arb代表以太坊L2 Arbitrum，注意全部为小写字母哦
  * @return {*} 返回值为交易hash代表成功。例如：0xcc07051ca530dbb1982b25438ca1a0d5c874a3c4c104256b7d7981e78bb02e63    可以通过判断err!=nil；其他返回他信息错误原因err.Error()在[]byte内
  */
-func UserFreeMintPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, flag string, ChainType string) ([]byte, error) {
-	now := uint64(time.Now().Unix())    //获取当前时间
-	by := make([]byte, 8)               //建立数组
-	binary.BigEndian.PutUint64(by, now) //uint64转数组
-	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
-	src_appid := publicEncode([]byte(myappid), publickey)
-	src_mytime := publicEncode([]byte(by), publickey)
-	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
-	binary.BigEndian.PutUint64(by, uint64(Nonce)) //uint64转数组
-	src_Nonce := publicEncode([]byte(by), publickey)
-	binary.BigEndian.PutUint64(by, uint64(LifeTime)) //uint64转数组
-	src_LifeTime := publicEncode([]byte(by), publickey)
-	src_Password := publicEncode([]byte(Password), publickey)
-	src_From := publicEncode([]byte(From), publickey)
-	src_ChainType := publicEncode([]byte(ChainType), publickey)
-	//post请求提交json数据
-	messages := FreeGasMint_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, src_ChainType}
-	ba, err := json.Marshal(messages)
-	if err != nil {
-		return []byte("json.Marshal error"), err
-	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
-	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
-	if err != nil {
-		// body, err := ioutil.ReadAll(resp.Body)
-		return []byte("http error:" + fmt.Sprint(err)), err
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return []byte("ReadAll error"), err
-	}
-	return body, nil
-}
+// func UserFreeMintPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, flag string, ChainType string) ([]byte, error) {
+// 	now := uint64(time.Now().Unix())    //获取当前时间
+// 	by := make([]byte, 8)               //建立数组
+// 	binary.BigEndian.PutUint64(by, now) //uint64转数组
+// 	//加密数据
+// 	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+// 	src_appid := publicEncode([]byte(myappid), publickey)
+// 	src_mytime := publicEncode([]byte(by), publickey)
+// 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
+// 	binary.BigEndian.PutUint64(by, uint64(Nonce)) //uint64转数组
+// 	src_Nonce := publicEncode([]byte(by), publickey)
+// 	binary.BigEndian.PutUint64(by, uint64(LifeTime)) //uint64转数组
+// 	src_LifeTime := publicEncode([]byte(by), publickey)
+// 	src_Password := publicEncode([]byte(Password), publickey)
+// 	src_From := publicEncode([]byte(From), publickey)
+// 	src_ChainType := publicEncode([]byte(ChainType), publickey)
+// 	//post请求提交json数据
+// 	messages := FreeGasMint_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, src_ChainType}
+// 	ba, err := json.Marshal(messages)
+// 	if err != nil {
+// 		return []byte("json.Marshal error"), err
+// 	}
+// 	client := &http.Client{
+// 		Transport: &http.Transport{
+// 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+// 		},
+// 	}
+// 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
+// 	if err != nil {
+// 		// body, err := ioutil.ReadAll(resp.Body)
+// 		return []byte("http error:" + fmt.Sprint(err)), err
+// 	}
+// 	body, err := ioutil.ReadAll(resp.Body)
+// 	if err != nil {
+// 		return []byte("ReadAll error"), err
+// 	}
+// 	return body, nil
+// }
 
 //使用rsa公钥加密文件
 func publicEncode(plainText []byte, data []byte) []byte {
