@@ -119,20 +119,22 @@ type UserNFTUri_Message struct {
 
 var body []byte
 
-const TestAPPID_CFXName string = "0xd67c8aed16df25b21055993449222fa895c67eb87bb1d7130c38cc469d8625b5" //测试专用 APPID就是对应项目ID，不同项目会有不同合约,APPID也会不同
-const TestAPPID_ETHName string = "0xd8350f2533aa38e5ed0b99b1b4af1a134ba9854bbcf66435239b9c18f60276d7" //测试专用 APPID就是对应项目ID，不同项目会有不同合约,APPID也会不同
+var ERC155牛项目AAPID string = "0x21113ab31e28d14b506b7befc52f7e7ec0b42994d1cf4f2b7acabe43ae2dbfb2"
+var ERC155纸项目AAPID string = "0x31113ab31e28d14b506b7befc52f7e7ec0b42994d1cf4f2b7acabe43ae2dbfb2"
+var ERC721画廊项目AAPID string = "0x21558aed16df25b21055993449222fa895c333b87bb1d7130c38cc469d8625b5"
+
 //密钥托管服务器Post请求url
 const TestIPandPort string = "https://1.116.87.151:13149"                                       //测试专用
 const TestAdministratorPassword string = "dx123456"                                             //测试专用 管理员密码
 const TestAdministratorPasswordETH string = "!!@@qinfengdx"                                     //测试专用 管理员密码
 const TestCFXAdministratorAddress string = "cfxtest:aakmdj7tutgdy3h558rr5621mhrrx75kfyw3e3sfz0" //测试专用
-const TestETHAdministratorAddress string = "0xfec36af44b8be6AB6ba97aF3b71940D3f3B8B539"         //测试专用
+// const TestETHAdministratorAddress string = "0xfec36af44b8be6AB6ba97aF3b71940D3f3B8B539"         //测试专用
 var publickey []byte
 
 /**
  * @name:RegByPrivateKey
  * @test: 同步私钥和区块链支付密码
- * @msg:用户同步私钥和区块链支付密码 至ZKverse密钥托管系统账户
+ * @msg:用户同步私钥和区块链支付密码 至Jugugu密钥托管系统账户
  * @param {string} IPandPort 密钥系统请求链接 例如 https://127.0.0.1:13149
  * @param {string} APPID 项目认证的APPID 例如 0xd67c9aed16df25b21055993449229fa895c67eb87bb1d7130c38cc469d8625b5
  * @param {string} RegPassword 用户同步的二级支付密码
@@ -159,7 +161,7 @@ func RegByPrivateKey(IPandPort string, APPID string, RegPassword string, RegPriv
 /**
  * @name:Reg
  * @test: test font
- * @msg:用户注册Verse密钥托管系统账户
+ * @msg:用户注册Jugugu密钥托管系统账户
  * @param {string} IPandPort 密钥系统请求链接 例如 https://127.0.0.1:13149
  * @param {string} APPID 项目认证的APPID 例如 0xd67c9aed16df25b21055993449229fa895c67eb87bb1d7130c38cc469d8625b5
  * @param {string} RegPassword 用户注册时填写的二级支付密码：建议大小写+数字0-9
@@ -185,7 +187,7 @@ func Reg(IPandPort string, APPID string, RegPassword string, flag string) (strin
 /**
  * @name:InitRSAPuk
  * @test: test font
- * @msg:初始化与密钥系统的加密通信RSA2018公钥
+ * @msg:初始化与密钥系统的加密通信RSA2048公钥
  * @param {string} filename 加密通信公钥文件路径 public.pem  也可以自己重命名名称
  * @return {*}
  */
@@ -631,8 +633,8 @@ func AdminTransferNFTBatchPost(IPandPort string, actionName string, myappid stri
 * @msg:NFT的通用转移函数，本函数实现NFTID为id的NFT从From地址转移至to地址。From地址必须是id的NFT拥有者
 * @param {string} IPandPort 密钥系统请求链接 例如 https://127.0.0.1:13149
 * @param {string} actionName 请求名称，同样名称的含义也是请求的功能，注意区分ETH和Conflux。
-	!本参数传入：CFX_TransferFrom代表conflux区块链上的ERC721合约，ETH_TransferFrom代表以太坊及其侧链、L2的ERC721合约
-	!CFX_1155TransferFrom代表conflux区块链上的ERC1155合约，ETH_1155TransferFrom代表以太坊及其侧链、L2的ERC1155合约
+	本参数传入：CFX_TransferFrom代表conflux区块链上的ERC721合约，ETH_TransferFrom代表以太坊及其侧链、L2的ERC721合约
+	CFX_1155TransferFrom代表conflux区块链上的ERC1155合约，ETH_1155TransferFrom代表以太坊及其侧链、L2的ERC1155合约
 * @param {string} myappid 项目认证的APPID 例如 0xd67c9aed16df25b21055993449229fa895c67eb87bb1d7130c38cc469d8625b5
 * @param {int64} Nonce 随机数，该参数用于同一地址的并发区块链交易执行，如果管理员执行一次或者串行执行N次，传参-1  如果需要并发连续执行20次，那么需要一次传入0-19，作为区块链随机数以避免交易冲突
 * @param {uint64} LifeTime 私钥的生命周期，单位毫秒，设置该参数可以加快处理速度，减少区块链密钥系统解密重复运算，如果执行一次建议值2000，如果并发执行N次，建议1000*N
