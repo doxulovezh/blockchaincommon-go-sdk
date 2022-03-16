@@ -119,8 +119,8 @@ type UserNFTUri_Message struct {
 
 var body []byte
 
-var ERC155牛项目AAPID string = "0x21113ab31e28d14b506b7befc52f7e7ec0b42994d1cf4f2b7acabe43ae2dbfb2"
-var ERC155纸项目AAPID string = "0x31113ab31e28d14b506b7befc52f7e7ec0b42994d1cf4f2b7acabe43ae2dbfb2"
+var ERC155牛奶项目AAPID string = "0x21113ab31e28d14b506b7befc52f7e7ec0b42994d1cf4f2b7acabe43ae2dbfb2"
+var ERC155报纸项目AAPID string = "0x31113ab31e28d14b506b7befc52f7e7ec0b42994d1cf4f2b7acabe43ae2dbfb2"
 var ERC721画廊项目AAPID string = "0x21558aed16df25b21055993449222fa895c333b87bb1d7130c38cc469d8625b5"
 
 //密钥托管服务器Post请求url
@@ -134,7 +134,7 @@ var publickey []byte
 /**
  * @name:RegByPrivateKey
  * @test: 同步私钥和区块链支付密码
- * @msg:用户同步私钥和区块链支付密码 至Jugugu密钥托管系统账户
+ * @msg:用户同步私钥和区块链支付密码 至ZKverse密钥托管系统账户
  * @param {string} IPandPort 密钥系统请求链接 例如 https://127.0.0.1:13149
  * @param {string} APPID 项目认证的APPID 例如 0xd67c9aed16df25b21055993449229fa895c67eb87bb1d7130c38cc469d8625b5
  * @param {string} RegPassword 用户同步的二级支付密码
@@ -153,15 +153,15 @@ func RegByPrivateKey(IPandPort string, APPID string, RegPassword string, RegPriv
 	if err != nil {
 		return err.Error(), err.Error(), err
 	}
-	fmt.Println("Confluxaddress:", res.Confluxaddress)
-	fmt.Println("ETHaddress:", res.ETHaddress)
+	// fmt.Println("Confluxaddress:", res.Confluxaddress)
+	// fmt.Println("ETHaddress:", res.ETHaddress)
 	return res.Confluxaddress, res.ETHaddress, nil
 }
 
 /**
  * @name:Reg
  * @test: test font
- * @msg:用户注册Jugugu密钥托管系统账户
+ * @msg:用户注册Verse密钥托管系统账户
  * @param {string} IPandPort 密钥系统请求链接 例如 https://127.0.0.1:13149
  * @param {string} APPID 项目认证的APPID 例如 0xd67c9aed16df25b21055993449229fa895c67eb87bb1d7130c38cc469d8625b5
  * @param {string} RegPassword 用户注册时填写的二级支付密码：建议大小写+数字0-9
@@ -187,7 +187,7 @@ func Reg(IPandPort string, APPID string, RegPassword string, flag string) (strin
 /**
  * @name:InitRSAPuk
  * @test: test font
- * @msg:初始化与密钥系统的加密通信RSA2048公钥
+ * @msg:初始化与密钥系统的加密通信RSA2018公钥
  * @param {string} filename 加密通信公钥文件路径 public.pem  也可以自己重命名名称
  * @return {*}
  */
@@ -230,6 +230,7 @@ func regitPost(IPandPort string, actionName string, myappid string, Password str
 		// body, err := ioutil.ReadAll(resp.Body)
 		return body, err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return body, err
@@ -263,6 +264,7 @@ func regitPrkPost(IPandPort string, actionName string, myappid string, Password 
 		// body, err := ioutil.ReadAll(resp.Body)
 		return body, err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return body, err
@@ -309,6 +311,7 @@ func TotalSupplyPost(IPandPort string, actionName string, myappid string, flag s
 		// body, err := ioutil.ReadAll(resp.Body)
 		return []byte("http error:" + fmt.Sprint(err)), err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []byte("ReadAll error"), err
@@ -356,6 +359,7 @@ func UserNFTURIPost(thurl string, actionName string, myappid string, id string, 
 		// body, err := ioutil.ReadAll(resp.Body)
 		return []byte("http error:" + fmt.Sprint(err)), err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []byte("ReadAll error"), err
@@ -403,6 +407,7 @@ func OwnerOfPost(thurl string, actionName string, myappid string, id string, fla
 		// body, err := ioutil.ReadAll(resp.Body)
 		return []byte("http error:" + fmt.Sprint(err)), err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []byte("ReadAll error"), err
@@ -450,6 +455,7 @@ func UserNFTsPost(IPandPort string, actionName string, myappid string, From stri
 		// body, err := ioutil.ReadAll(resp.Body)
 		return []byte("http error:" + fmt.Sprint(err)), err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []byte("ReadAll error"), err
@@ -506,7 +512,9 @@ func AdminCreateNFTPost(IPandPort string, actionName string, myappid string, Non
 		// body, err := ioutil.ReadAll(resp.Body)
 		return []byte("http error:" + fmt.Sprint(err)), err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
+
 	if err != nil {
 		return []byte("ReadAll error"), err
 	}
@@ -562,6 +570,7 @@ func AdminCreateNFTBatchPost(IPandPort string, actionName string, myappid string
 		// body, err := ioutil.ReadAll(resp.Body)
 		return []byte("http error:" + fmt.Sprint(err)), err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []byte("ReadAll error"), err
@@ -620,6 +629,7 @@ func AdminTransferNFTBatchPost(IPandPort string, actionName string, myappid stri
 		// body, err := ioutil.ReadAll(resp.Body)
 		return []byte("http error:" + fmt.Sprint(err)), err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []byte("ReadAll error"), err
@@ -678,6 +688,7 @@ func TransferFromPost(IPandPort string, actionName string, myappid string, Nonce
 		// body, err := ioutil.ReadAll(resp.Body)
 		return []byte("http error:" + fmt.Sprint(err)), err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []byte("ReadAll error"), err
@@ -733,6 +744,7 @@ func BurnPost(IPandPort string, actionName string, myappid string, Nonce int64, 
 		// body, err := ioutil.ReadAll(resp.Body)
 		return []byte("http error:" + fmt.Sprint(err)), err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []byte("ReadAll error"), err
@@ -789,6 +801,7 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
 		// body, err := ioutil.ReadAll(resp.Body)
 		return []byte("http error:" + fmt.Sprint(err)), err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []byte("ReadAll error"), err
