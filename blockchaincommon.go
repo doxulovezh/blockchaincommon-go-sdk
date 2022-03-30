@@ -13,6 +13,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -122,6 +123,7 @@ var body []byte
 var ERC155牛奶项目AAPID string = "0x21113ab31e28d14b506b7befc52f7e7ec0b42994d1cf4f2b7acabe43ae2dbfb2"
 var ERC155报纸项目AAPID string = "0x31113ab31e28d14b506b7befc52f7e7ec0b42994d1cf4f2b7acabe43ae2dbfb2"
 var ERC721画廊项目AAPID string = "0x21558aed16df25b21055993449222fa895c333b87bb1d7130c38cc469d8625b5"
+var ERC1155薄荷测试AAPID string = "0xe83e5903b2223732ed9d10cbf12260a0eacb0efe157b2e60d66c8885b370837a"
 
 //密钥托管服务器Post请求url
 const TestIPandPort string = "https://1.116.87.151:13149"                                       //测试专用
@@ -130,11 +132,12 @@ const TestAdministratorPasswordETH string = "!!@@qinfengdx"                     
 const TestCFXAdministratorAddress string = "cfxtest:aakmdj7tutgdy3h558rr5621mhrrx75kfyw3e3sfz0" //测试专用
 // const TestETHAdministratorAddress string = "0xfec36af44b8be6AB6ba97aF3b71940D3f3B8B539"         //测试专用
 var publickey []byte
+var client *http.Client
 
 /**
  * @name:RegByPrivateKey
  * @test: 同步私钥和区块链支付密码
- * @msg:用户同步私钥和区块链支付密码 至ZKverse密钥托管系统账户
+ * @msg:用户同步私钥和区块链支付密码 至新MINTS_PRK密钥托管系统账户
  * @param {string} IPandPort 密钥系统请求链接 例如 https://127.0.0.1:13149
  * @param {string} APPID 项目认证的APPID 例如 0xd67c9aed16df25b21055993449229fa895c67eb87bb1d7130c38cc469d8625b5
  * @param {string} RegPassword 用户同步的二级支付密码
@@ -191,6 +194,7 @@ func Reg(IPandPort string, APPID string, RegPassword string, flag string) (strin
  * @param {string} filename 加密通信公钥文件路径 public.pem  也可以自己重命名名称
  * @return {*}
  */
+
 func InitRSAPuk(filename string) error {
 	//1. 读取公钥信息 放到data变量中
 	file, err := os.Open(filename)
@@ -202,6 +206,19 @@ func InitRSAPuk(filename string) error {
 	file.Read(data)
 	file.Close()
 	publickey = data
+	//client
+	client = &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 100 * time.Second,
+			}).DialContext,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       60 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+	}
 	return nil
 }
 func regitPost(IPandPort string, actionName string, myappid string, Password string, flag string) ([]byte, error) {
@@ -220,11 +237,7 @@ func regitPost(IPandPort string, actionName string, myappid string, Password str
 	if err != nil {
 		return []byte(""), err
 	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		// body, err := ioutil.ReadAll(resp.Body)
@@ -253,11 +266,6 @@ func regitPrkPost(IPandPort string, actionName string, myappid string, Password 
 	ba, err := json.Marshal(messages)
 	if err != nil {
 		return []byte(""), err
-	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
 	}
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
@@ -301,11 +309,7 @@ func TotalSupplyPost(IPandPort string, actionName string, myappid string, flag s
 	if err != nil {
 		return []byte("json.Marshal error"), err
 	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		// body, err := ioutil.ReadAll(resp.Body)
@@ -349,11 +353,7 @@ func UserNFTURIPost(thurl string, actionName string, myappid string, id string, 
 	if err != nil {
 		return []byte("json.Marshal error"), err
 	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+
 	resp, err := client.Post(thurl+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		// body, err := ioutil.ReadAll(resp.Body)
@@ -397,11 +397,7 @@ func OwnerOfPost(thurl string, actionName string, myappid string, id string, fla
 	if err != nil {
 		return []byte("json.Marshal error"), err
 	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+
 	resp, err := client.Post(thurl+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		// body, err := ioutil.ReadAll(resp.Body)
@@ -445,11 +441,7 @@ func UserNFTsPost(IPandPort string, actionName string, myappid string, From stri
 	if err != nil {
 		return []byte("json.Marshal error"), err
 	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		// body, err := ioutil.ReadAll(resp.Body)
@@ -502,11 +494,7 @@ func AdminCreateNFTPost(IPandPort string, actionName string, myappid string, Non
 	if err != nil {
 		return []byte("json.Marshal error"), err
 	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		// body, err := ioutil.ReadAll(resp.Body)
@@ -560,11 +548,7 @@ func AdminCreateNFTBatchPost(IPandPort string, actionName string, myappid string
 	if err != nil {
 		return []byte("json.Marshal error"), err
 	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		// body, err := ioutil.ReadAll(resp.Body)
@@ -619,11 +603,7 @@ func AdminTransferNFTBatchPost(IPandPort string, actionName string, myappid stri
 	if err != nil {
 		return []byte("json.Marshal error"), err
 	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		// body, err := ioutil.ReadAll(resp.Body)
@@ -678,11 +658,7 @@ func TransferFromPost(IPandPort string, actionName string, myappid string, Nonce
 	if err != nil {
 		return []byte("json.Marshal error"), err
 	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		// body, err := ioutil.ReadAll(resp.Body)
@@ -734,11 +710,7 @@ func BurnPost(IPandPort string, actionName string, myappid string, Nonce int64, 
 	if err != nil {
 		return []byte("json.Marshal error"), err
 	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		// body, err := ioutil.ReadAll(resp.Body)
@@ -791,11 +763,7 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
 	if err != nil {
 		return []byte("json.Marshal error"), err
 	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+
 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 	if err != nil {
 		// body, err := ioutil.ReadAll(resp.Body)
@@ -849,11 +817,7 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
 // 	if err != nil {
 // 		return []byte("json.Marshal error"), err
 // 	}
-// 	client := &http.Client{
-// 		Transport: &http.Transport{
-// 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-// 		},
-// 	}
+
 // 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 // 	if err != nil {
 // 		// body, err := ioutil.ReadAll(resp.Body)
@@ -903,11 +867,7 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
 // 	if err != nil {
 // 		return []byte("json.Marshal error"), err
 // 	}
-// 	client := &http.Client{
-// 		Transport: &http.Transport{
-// 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-// 		},
-// 	}
+
 // 	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
 // 	if err != nil {
 // 		// body, err := ioutil.ReadAll(resp.Body)
