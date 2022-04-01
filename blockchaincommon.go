@@ -162,6 +162,25 @@ func RegByPrivateKey(IPandPort string, APPID string, RegPassword string, RegPriv
 }
 
 /**
+* @name:GetPrivateKey
+* @test: 获取私钥
+* @msg:使用用户的区块链支付密码+区块链地址密钥托管系统账户的私钥
+* @param {string} IPandPort 密钥系统请求链接 例如 https://127.0.0.1:13149
+* @param {string} APPID 项目认证的APPID 例如 0xd67c9aed16df25b21055993449229fa895c67eb87bb1d7130c38cc469d8625b5
+* @param {string} RegPassword 用户的二级支付密码
+* @param {string} AccountAddresss 用户的CFX地址
+ * @param {string} flag 标记，用于同一地址区块链并发交易使用，通常就填写本函数名称{GetPrivateKey}
+* @return {*}[]byte  string(body)后就是私钥字符串 c81da242b85eb0aef53b641db64fc81c3e366b069436bd415efa546cc45c35ec
+*/
+func GetPrivateKey(IPandPort string, APPID string, RegPassword string, AccountAddresss string, flag string) ([]byte, error) {
+	body, err := regitPrkPost(IPandPort, "GetPrivateKey", APPID, RegPassword, AccountAddresss, flag)
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
+}
+
+/**
  * @name:Reg
  * @test: test font
  * @msg:用户注册Verse密钥托管系统账户
