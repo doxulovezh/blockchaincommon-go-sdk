@@ -16,7 +16,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -131,7 +130,8 @@ const TestAdministratorPassword string = "dx123456"                             
 const TestAdministratorPasswordETH string = "!!@@qinfengdx"                                     //测试专用 管理员密码
 const TestCFXAdministratorAddress string = "cfxtest:aakmdj7tutgdy3h558rr5621mhrrx75kfyw3e3sfz0" //测试专用
 // const TestETHAdministratorAddress string = "0xfec36af44b8be6AB6ba97aF3b71940D3f3B8B539"         //测试专用
-var publickey []byte
+var publickey *rsa.PublicKey
+var RetrunprivateKey *rsa.PrivateKey
 var client *http.Client
 
 /**
@@ -177,7 +177,12 @@ func GetPrivateKey(IPandPort string, APPID string, RegPassword string, AccountAd
 	if err != nil {
 		return nil, err
 	}
-	return body, nil
+	//解密
+	PrvKey, err := PrivateDecode(body, RetrunprivateKey)
+	if err != nil {
+		return nil, err
+	}
+	return PrvKey, nil
 }
 
 /**
@@ -214,9 +219,9 @@ func Reg(IPandPort string, APPID string, RegPassword string, flag string) (strin
  * @return {*}
  */
 
-func InitRSAPuk(filename string) error {
+func InitRSAPuk(pukfilename string, prkfilename string) error {
 	//1. 读取公钥信息 放到data变量中
-	file, err := os.Open(filename)
+	file, err := os.Open(pukfilename)
 	if err != nil {
 		return err
 	}
@@ -224,17 +229,42 @@ func InitRSAPuk(filename string) error {
 	data := make([]byte, stat.Size())
 	file.Read(data)
 	file.Close()
-	publickey = data
+	//转化
+	block, _ := pem.Decode(data)
+	//3. 使用x509将编码之后的公钥解析出来
+	pubInterface, err2 := x509.ParsePKIXPublicKey(block.Bytes)
+	if err2 != nil {
+		fmt.Println(err.Error())
+	}
+	publickey = pubInterface.(*rsa.PublicKey)
+	//解密密钥-私钥
+	//2. 将得到的字符串进行pem解码
+	file, err = os.Open(prkfilename)
+	if err != nil {
+		return err
+	}
+	stat, _ = file.Stat() //得到文件属性信息
+	data = make([]byte, stat.Size())
+	file.Read(data)
+	file.Close()
+	block, _ = pem.Decode(data)
+	// fmt.Println(block)
+	//3. 使用x509将编码之后的私钥解析出来
+	privateKey, err3 := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err3 != nil {
+		panic(err3)
+	}
+	RetrunprivateKey = privateKey
 	//client
 	client = &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			DialContext: (&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 100 * time.Second,
+				Timeout:   15 * time.Second,
+				KeepAlive: 15 * time.Second,
 			}).DialContext,
-			MaxIdleConns:          100,
-			IdleConnTimeout:       60 * time.Second,
+			MaxIdleConns:          512,
+			IdleConnTimeout:       120 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
 		},
 	}
@@ -245,7 +275,7 @@ func regitPost(IPandPort string, actionName string, myappid string, Password str
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 	src_appid := publicEncode([]byte(myappid), publickey)
 	src_mytime := publicEncode([]byte(by), publickey)
 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -274,7 +304,7 @@ func regitPrkPost(IPandPort string, actionName string, myappid string, Password 
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 	src_appid := publicEncode([]byte(myappid), publickey)
 	src_mytime := publicEncode([]byte(by), publickey)
 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -316,7 +346,7 @@ func TotalSupplyPost(IPandPort string, actionName string, myappid string, flag s
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 	src_appid := publicEncode([]byte(myappid), publickey)
 	src_mytime := publicEncode([]byte(by), publickey)
 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -359,7 +389,7 @@ func UserNFTURIPost(thurl string, actionName string, myappid string, id string, 
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 	src_appid := publicEncode([]byte(myappid), publickey)
 	src_mytime := publicEncode([]byte(by), publickey)
 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -403,7 +433,7 @@ func OwnerOfPost(thurl string, actionName string, myappid string, id string, fla
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 	src_appid := publicEncode([]byte(myappid), publickey)
 	src_mytime := publicEncode([]byte(by), publickey)
 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -447,7 +477,7 @@ func UserNFTsPost(IPandPort string, actionName string, myappid string, From stri
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 	src_appid := publicEncode([]byte(myappid), publickey)
 	src_mytime := publicEncode([]byte(by), publickey)
 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -495,7 +525,7 @@ func AdminCreateNFTPost(IPandPort string, actionName string, myappid string, Non
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 	src_appid := publicEncode([]byte(myappid), publickey)
 	src_mytime := publicEncode([]byte(by), publickey)
 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -549,7 +579,7 @@ func AdminCreateNFTBatchPost(IPandPort string, actionName string, myappid string
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 	src_appid := publicEncode([]byte(myappid), publickey)
 	src_mytime := publicEncode([]byte(by), publickey)
 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -603,7 +633,7 @@ func AdminTransferNFTBatchPost(IPandPort string, actionName string, myappid stri
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 	src_appid := publicEncode([]byte(myappid), publickey)
 	src_mytime := publicEncode([]byte(by), publickey)
 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -660,7 +690,7 @@ func TransferFromPost(IPandPort string, actionName string, myappid string, Nonce
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 	src_appid := publicEncode([]byte(myappid), publickey)
 	src_mytime := publicEncode([]byte(by), publickey)
 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -712,7 +742,7 @@ func BurnPost(IPandPort string, actionName string, myappid string, Nonce int64, 
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 	src_appid := publicEncode([]byte(myappid), publickey)
 	src_mytime := publicEncode([]byte(by), publickey)
 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -765,7 +795,7 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
 	by := make([]byte, 8)               //建立数组
 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 	//加密数据
-	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 	src_appid := publicEncode([]byte(myappid), publickey)
 	src_mytime := publicEncode([]byte(by), publickey)
 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -817,7 +847,7 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
 // 	by := make([]byte, 8)               //建立数组
 // 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 // 	//加密数据
-// 	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+// 	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 // 	src_appid := publicEncode([]byte(myappid), publickey)
 // 	src_mytime := publicEncode([]byte(by), publickey)
 // 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -869,7 +899,7 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
 // 	by := make([]byte, 8)               //建立数组
 // 	binary.BigEndian.PutUint64(by, now) //uint64转数组
 // 	//加密数据
-// 	sha256Value := []byte(CalculateHashcode(myappid)) //APPID的sha256
+// 	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
 // 	src_appid := publicEncode([]byte(myappid), publickey)
 // 	src_mytime := publicEncode([]byte(by), publickey)
 // 	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
@@ -900,26 +930,24 @@ func ApprovePost(IPandPort string, actionName string, myappid string, Nonce int6
 // }
 
 //使用rsa公钥加密文件
-func publicEncode(plainText []byte, data []byte) []byte {
-	//1. 读取公钥信息 放到data变量中
-	//2. 将得到的字符串pem解码
-	//1. 读取公钥信息 放到data变量中
-
-	//2. 将得到的字符串pem解码
-	block, _ := pem.Decode(data)
-	//3. 使用x509将编码之后的公钥解析出来
-	pubInterface, err2 := x509.ParsePKIXPublicKey(block.Bytes)
-	if err2 != nil {
-		panic(err2)
-	}
-	pubKey := pubInterface.(*rsa.PublicKey)
-
+func publicEncode(plainText []byte, pubKey *rsa.PublicKey) []byte {
 	//4. 使用公钥加密
 	cipherText, err3 := rsa.EncryptPKCS1v15(rand.Reader, pubKey, plainText)
 	if err3 != nil {
 		panic(err3)
 	}
 	return cipherText
+}
+
+//使用rsa私钥解密
+func PrivateDecode(cipherText []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
+
+	//4. 使用私钥将数据解密
+	plainText, err4 := rsa.DecryptPKCS1v15(rand.Reader, privateKey, cipherText)
+	if err4 != nil {
+		return nil, err4
+	}
+	return plainText, nil
 }
 
 //使用rsa公钥加密文件
@@ -963,38 +991,32 @@ func split(buf []byte, lim int) [][]byte {
 
 //sha256运算
 /**
- * @name: CalculateHashcode
+ * @name: SHA256_strReturnString
  * @test: test font
  * @msg: 计算字符串的sh256值即hash值
  * @param {string} data 待计算的字符串
  * @return {*} 返回hash
  */
-func CalculateHashcode(data string) string {
-	nonce := 0
-	var str string
-	var check string
-	pass := false
-	var dif int = 4
-	for nonce = 0; ; nonce++ {
-		str = ""
-		check = ""
-		check = data + strconv.Itoa(nonce)
-		h := sha256.New()
-		h.Write([]byte(check))
-		hashed := h.Sum(nil)
-		str = hex.EncodeToString(hashed)
-		for i := 0; i < dif; i++ {
-			if str[i] != '0' {
-				break
-			}
-			if i == dif-1 {
-				pass = true
-			}
-		}
-		if pass == true {
-			return str
-		}
+func SHA256(buff []byte) [32]byte {
+	return sha256.Sum256(buff)
+}
+func SHA256_ReturnString(str []byte) string {
+	bu := SHA256(str)
+	buffer := make([]byte, 32)
+	for i := 0; i < 32; i++ {
+		buffer[i] = bu[i]
 	}
+	// fmt.Println(hex.EncodeToString(buffer)) //得到hash
+	return hex.EncodeToString(buffer)
+}
+func SHA256_strReturnString(str string) string {
+	bu := SHA256([]byte(str))
+	buffer := make([]byte, 32)
+	for i := 0; i < 32; i++ {
+		buffer[i] = bu[i]
+	}
+	// fmt.Println(hex.EncodeToString(buffer)) //得到hash
+	return hex.EncodeToString(buffer)
 }
 
 //跨域
