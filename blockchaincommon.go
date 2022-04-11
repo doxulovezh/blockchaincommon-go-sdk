@@ -119,16 +119,12 @@ type UserNFTUri_Message struct {
 
 var body []byte
 
-var ERC155牛奶项目AAPID string = "0x21113ab31e28d14b506b7befc52f7e7ec0b42994d1cf4f2b7acabe43ae2dbfb2"
-var ERC155报纸项目AAPID string = "0x31113ab31e28d14b506b7befc52f7e7ec0b42994d1cf4f2b7acabe43ae2dbfb2"
-var ERC721画廊项目AAPID string = "0x21558aed16df25b21055993449222fa895c333b87bb1d7130c38cc469d8625b5"
-var ERC1155薄荷测试AAPID string = "0xe83e5903b2223732ed9d10cbf12260a0eacb0efe157b2e60d66c8885b370837a"
+var ERC测试项目AAPID string = "0x21113ab31e28d14b506b7befc52f7e7ec0b42994d1cf4f2b7acabe43ae2dbfb2"
 
 //密钥托管服务器Post请求url
-const TestIPandPort string = "https://1.116.87.151:13149"                                       //测试专用
-const TestAdministratorPassword string = "dx123456"                                             //测试专用 管理员密码
-const TestAdministratorPasswordETH string = "!!@@qinfengdx"                                     //测试专用 管理员密码
-const TestCFXAdministratorAddress string = "cfxtest:aakmdj7tutgdy3h558rr5621mhrrx75kfyw3e3sfz0" //测试专用
+const TestIPandPort string = "https://182.92.64.217:13149"                                      //测试专用
+const TestAdministratorPassword string = "!!qinchuandx@NFT"                                     //测试专用 管理员密码
+const TestCFXAdministratorAddress string = "cfxtest:achz1z8duu6whm6we631jdxwdcdfrccdujnchj18hm" //测试专用
 // const TestETHAdministratorAddress string = "0xfec36af44b8be6AB6ba97aF3b71940D3f3B8B539"         //测试专用
 var publickey *rsa.PublicKey
 var RetrunprivateKey *rsa.PrivateKey
