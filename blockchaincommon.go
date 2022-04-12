@@ -122,7 +122,7 @@ var body []byte
 var ERC测试项目AAPID string = "0x21113ab31e28d14b506b7befc52f7e7ec0b42994d1cf4f2b7acabe43ae2dbfb2"
 
 //密钥托管服务器Post请求url
-const TestIPandPort string = "https://182.92.64.217:13149"                                      //测试专用
+const TestIPandPort string = "https://testprk.jugugu.cn"                                        //测试专用
 const TestAdministratorPassword string = "!!qinchuandx@NFT"                                     //测试专用 管理员密码
 const TestCFXAdministratorAddress string = "cfxtest:achz1z8duu6whm6we631jdxwdcdfrccdujnchj18hm" //测试专用
 // const TestETHAdministratorAddress string = "0xfec36af44b8be6AB6ba97aF3b71940D3f3B8B539"         //测试专用
