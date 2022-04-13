@@ -41,3 +41,4 @@ Fragment storage key escrow system supported by the whole chain
 ## 2022.04.10 新增新的hash算法，优化RSA加密，提升效率
 
 ## 2022.04.12 新增公用的HTTPS服务器
+## 2022.04.13 修复管理员地址错误问题
