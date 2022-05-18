@@ -19,6 +19,19 @@ import (
 	"time"
 )
 
+type AdminCreateNFTBatch_URI_Message struct {
+	Sha256Value []byte   `json:"sha256value"`
+	Appid       []byte   `json:"appid"`
+	Time        []byte   `json:"emit"`
+	Token       []byte   `json:"token"`
+	Nonce       []byte   `json:"nonce"`
+	LifeTime    []byte   `json:"lifeTime"`
+	Password    []byte   `json:"password"`
+	From        []byte   `json:"From"`
+	Tos         []string `json:"Tos"`
+	URIS        []string `json:"uris"`
+	ChainType   []byte   `json:"chainType"`
+}
 type UserRegit_Message struct {
 	Sha256Value []byte `json:"sha256value"`
 	Appid       []byte `json:"appid"`
@@ -173,6 +186,7 @@ func GetPrivateKey(IPandPort string, APPID string, RegPassword string, AccountAd
 	if err != nil {
 		return nil, err
 	}
+	// fmt.Println(string(body))
 	//解密
 	PrvKey, err := PrivateDecode(body, RetrunprivateKey)
 	if err != nil {
@@ -589,6 +603,45 @@ func AdminCreateNFTBatchPost(IPandPort string, actionName string, myappid string
 	src_ChainType := publicEncode([]byte(ChainType), publickey)
 	//post请求提交json数据
 	messages := AdminCreateNFTBatch_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, src_Tos, src_ChainType}
+	ba, err := json.Marshal(messages)
+	if err != nil {
+		return []byte("json.Marshal error"), err
+	}
+
+	resp, err := client.Post(IPandPort+"/"+actionName+"", "application/json", bytes.NewBuffer([]byte(ba)))
+	if err != nil {
+		// body, err := ioutil.ReadAll(resp.Body)
+		return []byte("http error:" + fmt.Sprint(err)), err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return []byte("ReadAll error"), err
+	}
+	return body, nil
+}
+
+//URI模式
+//action =  CFX_AdminCreateNFTBatch_URI
+func AdminCreateNFTBatch_URIPost(IPandPort string, actionName string, myappid string, Nonce int64, LifeTime uint64, Password string, From string, tos []string, uirs []string, flag string, ChainType string) ([]byte, error) {
+	now := uint64(time.Now().Unix())    //获取当前时间
+	by := make([]byte, 8)               //建立数组
+	binary.BigEndian.PutUint64(by, now) //uint64转数组
+	//加密数据
+	sha256Value := []byte(SHA256_strReturnString(myappid)) //APPID的sha256
+	src_appid := publicEncode([]byte(myappid), publickey)
+	src_mytime := publicEncode([]byte(by), publickey)
+	src_token := publicEncode([]byte(fmt.Sprint(time.Now().UnixNano())+myappid+flag), publickey)
+	binary.BigEndian.PutUint64(by, uint64(Nonce)) //uint64转数组
+	src_Nonce := publicEncode([]byte(by), publickey)
+	binary.BigEndian.PutUint64(by, uint64(LifeTime)) //uint64转数组
+	src_LifeTime := publicEncode([]byte(by), publickey)
+	src_Password := publicEncode([]byte(Password), publickey)
+	src_From := publicEncode([]byte(From), publickey)
+	src_Tos := tos
+	src_ChainType := publicEncode([]byte(ChainType), publickey)
+	//post请求提交json数据
+	messages := AdminCreateNFTBatch_URI_Message{sha256Value, src_appid, src_mytime, src_token, src_Nonce, src_LifeTime, src_Password, src_From, src_Tos, uirs, src_ChainType}
 	ba, err := json.Marshal(messages)
 	if err != nil {
 		return []byte("json.Marshal error"), err
